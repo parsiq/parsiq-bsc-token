@@ -9,14 +9,14 @@ contract ParsiqToken is IERC20 {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    uint256 constant public TOTAL_CAP = 500000000 * 10 ** 18;
-    uint256 constant private MAX_UINT256 = ~uint256(0);
-    string constant public name = "Parsiq Token";
-    string constant public symbol = "PRQ";
-    uint8 constant public decimals = 18;
+    uint256 public constant TOTAL_CAP = 500000000 * 10**18;
+    uint256 private constant MAX_UINT256 = ~uint256(0);
+    string public constant name = "Parsiq Token";
+    string public constant symbol = "PRQ";
+    uint8 public constant decimals = 18;
 
-    mapping (address => uint256) private _balances;
-    mapping (address => mapping (address => uint256)) private _allowances;
+    mapping(address => uint256) private _balances;
+    mapping(address => mapping(address => uint256)) private _allowances;
     uint256 private _totalSupply;
 
     bytes32 public DOMAIN_SEPARATOR;
@@ -28,7 +28,7 @@ contract ParsiqToken is IERC20 {
     mapping(address => bool) public bridges;
     uint256 public reviewPeriod = 86400; // 1 day
     uint256 public decisionPeriod = 86400; // 1 day after review period
-    uint256 public cap = 310256872 * 10 ** 18; // 500 000 000 - 189 743 128 (retention wallet at 25.02.2021)
+    uint256 public cap = 310256872 * 10**18; // 500 000 000 - 189 743 128 (retention wallet at 25.02.2021)
     address public governanceBoard;
     address public pendingGovernanceBoard;
     bool public paused = false;
@@ -80,9 +80,9 @@ contract ParsiqToken is IERC20 {
 
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
-                keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
                 keccak256(bytes(name)),
-                keccak256(bytes('1')),
+                keccak256(bytes("1")),
                 chainId,
                 address(this)
             )
@@ -145,11 +145,14 @@ contract ParsiqToken is IERC20 {
      * - `recipient` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(address recipient, uint256 amount) public override 
+    function transfer(address recipient, uint256 amount)
+        public
+        override
         onlyResolved(msg.sender)
         onlyResolved(recipient)
         whenNotPaused
-        returns (bool) {
+        returns (bool)
+    {
         _transfer(msg.sender, recipient, amount);
         return true;
     }
@@ -168,11 +171,14 @@ contract ParsiqToken is IERC20 {
      *
      * - `spender` cannot be the zero address.
      */
-    function approve(address spender, uint256 amount) public override
+    function approve(address spender, uint256 amount)
+        public
+        override
         onlyResolved(msg.sender)
         onlyResolved(spender)
         whenNotPaused
-        returns (bool) {
+        returns (bool)
+    {
         _approve(msg.sender, spender, amount);
         return true;
     }
@@ -189,15 +195,27 @@ contract ParsiqToken is IERC20 {
      * - the caller must have allowance for ``sender``'s tokens of at least
      * `amount`.
      */
-    function transferFrom(address sender, address recipient, uint256 amount) public override
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    )
+        public
+        override
         onlyResolved(msg.sender)
         onlyResolved(sender)
         onlyResolved(recipient)
         whenNotPaused
-        returns (bool) {
+        returns (bool)
+    {
         _transfer(sender, recipient, amount);
-        if (_allowances[sender][msg.sender] < MAX_UINT256) { // treat MAX_UINT256 approve as infinite approval
-            _approve(sender, msg.sender, _allowances[sender][msg.sender].sub(amount, "ERC20: transfer amount exceeds allowance"));
+        if (_allowances[sender][msg.sender] < MAX_UINT256) {
+            // treat MAX_UINT256 approve as infinite approval
+            _approve(
+                sender,
+                msg.sender,
+                _allowances[sender][msg.sender].sub(amount, "ERC20: transfer amount exceeds allowance")
+            );
         }
         return true;
     }
@@ -205,14 +223,17 @@ contract ParsiqToken is IERC20 {
     /**
      * @dev Allows governance board to transfer funds.
      *
-     * This allows to transfer tokens after review period have elapsed, 
+     * This allows to transfer tokens after review period have elapsed,
      * but before decision period is expired. So, basically governanceBoard have a time-window
-     * to move tokens from reviewed account. 
+     * to move tokens from reviewed account.
      * After decision period have been expired remaining tokens are unlocked.
      */
-    function governedTransfer(address from, address to, uint256 value) public onlyGovernanceBoard         
-        returns (bool) {
-        require(block.timestamp >  reviewPeriods[from], "Review period is not elapsed");
+    function governedTransfer(
+        address from,
+        address to,
+        uint256 value
+    ) public onlyGovernanceBoard returns (bool) {
+        require(block.timestamp > reviewPeriods[from], "Review period is not elapsed");
         require(block.timestamp <= decisionPeriods[from], "Decision period expired");
 
         _transfer(from, to, value);
@@ -232,11 +253,13 @@ contract ParsiqToken is IERC20 {
      *
      * - `spender` cannot be the zero address.
      */
-    function increaseAllowance(address spender, uint256 addedValue) public 
+    function increaseAllowance(address spender, uint256 addedValue)
+        public
         onlyResolved(msg.sender)
         onlyResolved(spender)
         whenNotPaused
-        returns (bool) {
+        returns (bool)
+    {
         _approve(msg.sender, spender, _allowances[msg.sender][spender].add(addedValue));
         return true;
     }
@@ -255,12 +278,18 @@ contract ParsiqToken is IERC20 {
      * - `spender` must have allowance for the caller of at least
      * `subtractedValue`.
      */
-    function decreaseAllowance(address spender, uint256 subtractedValue) public 
+    function decreaseAllowance(address spender, uint256 subtractedValue)
+        public
         onlyResolved(msg.sender)
         onlyResolved(spender)
         whenNotPaused
-        returns (bool) {
-        _approve(msg.sender, spender, _allowances[msg.sender][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
+        returns (bool)
+    {
+        _approve(
+            msg.sender,
+            spender,
+            _allowances[msg.sender][spender].sub(subtractedValue, "ERC20: decreased allowance below zero")
+        );
         return true;
     }
 
@@ -278,7 +307,11 @@ contract ParsiqToken is IERC20 {
      * - `recipient` cannot be the zero address.
      * - `sender` must have a balance of at least `amount`.
      */
-    function _transfer(address sender, address recipient, uint256 amount) internal {
+    function _transfer(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) internal {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 
@@ -319,7 +352,11 @@ contract ParsiqToken is IERC20 {
      * - `owner` cannot be the zero address.
      * - `spender` cannot be the zero address.
      */
-    function _approve(address owner, address spender, uint256 amount) internal {
+    function _approve(
+        address owner,
+        address spender,
+        uint256 amount
+    ) internal {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
@@ -332,17 +369,15 @@ contract ParsiqToken is IERC20 {
      *
      * See {ERC20-_burn}.
      */
-    function burn(uint256 amount) public 
-        onlyResolved(msg.sender)
-        whenNotPaused
-    {
+    function burn(uint256 amount) public onlyResolved(msg.sender) whenNotPaused {
         _burn(msg.sender, amount);
     }
 
     function transferMany(address[] calldata recipients, uint256[] calldata amounts)
+        external
         onlyResolved(msg.sender)
         whenNotPaused
-        external {
+    {
         require(recipients.length == amounts.length, "ParsiqToken: Wrong array length");
 
         uint256 total = 0;
@@ -363,23 +398,32 @@ contract ParsiqToken is IERC20 {
         }
     }
 
-    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external {
         // Need to unwrap modifiers to eliminate Stack too deep error
         require(decisionPeriods[owner] < block.timestamp, "Account is being reviewed");
         require(decisionPeriods[spender] < block.timestamp, "Account is being reviewed");
         require(!paused || msg.sender == governanceBoard, "Pausable: paused");
-        require(deadline >= block.timestamp, 'ParsiqToken: EXPIRED');    
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                '\x19\x01',
-                DOMAIN_SEPARATOR,
-                keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++, deadline))
-            )
-        );
+        require(deadline >= block.timestamp, "ParsiqToken: EXPIRED");
+        bytes32 digest =
+            keccak256(
+                abi.encodePacked(
+                    "\x19\x01",
+                    DOMAIN_SEPARATOR,
+                    keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++, deadline))
+                )
+            );
 
         address recoveredAddress = ecrecover(digest, v, r, s);
 
-        require(recoveredAddress != address(0) && recoveredAddress == owner, 'ParsiqToken: INVALID_SIGNATURE');
+        require(recoveredAddress != address(0) && recoveredAddress == owner, "ParsiqToken: INVALID_SIGNATURE");
         _approve(owner, spender, value);
     }
 
@@ -393,16 +437,24 @@ contract ParsiqToken is IERC20 {
         emit DecisionPeriodChanged(decisionPeriod);
     }
 
-    function recoverTokens(IERC20 token, address to, uint256 amount) public onlyGovernanceBoard {
+    function recoverTokens(
+        IERC20 token,
+        address to,
+        uint256 amount
+    ) public onlyGovernanceBoard {
         uint256 balance = token.balanceOf(address(this));
         require(balance >= amount, "ERC20: Insufficient balance");
         token.safeTransfer(to, amount);
     }
 
-    function mint(uint256 amount) public whenNotPaused onlyBridge {
+    function mint(address account, uint256 amount) public whenNotPaused onlyBridge {
         require(_totalSupply.add(amount) <= cap, "Exceeds cap");
 
-        _mint(msg.sender, amount);
+        _mint(account, amount);
+    }
+
+    function burn(address account, uint256 amount) external whenNotPaused onlyBridge {
+        _burn(account, amount);
     }
 
     function authorizeBridge(address _bridge) public onlyGovernanceBoard {
