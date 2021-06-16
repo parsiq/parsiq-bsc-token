@@ -51,8 +51,9 @@ contract AnyswapAdapter {
 
     function changeMPCOwner(address newOwner) public onlyOwner returns (bool) {
         require(newOwner != address(0), "AnyswapV3ERC20: address(0x0)");
+        _oldOwner = owner();
         _newOwner = newOwner;
-        _newOwnerEffectiveHeight = block.timestamp + 13300;
+        _newOwnerEffectiveHeight = block.number + 13300;
         emit LogChangeMPCOwner(_oldOwner, _newOwner, _newOwnerEffectiveHeight);
         return true;
     }

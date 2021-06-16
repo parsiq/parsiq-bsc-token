@@ -458,11 +458,13 @@ contract ParsiqToken is IERC20 {
     }
 
     function authorizeBridge(address _bridge) public onlyGovernanceBoard {
+        require(!bridges[_bridge], "Already authrized");
         bridges[_bridge] = true;
         emit BridgeAdded(_bridge);
     }
 
     function deauthorizeBridge(address _bridge) public onlyGovernanceBoard {
+        require(bridges[_bridge], "Already deauthrized");
         bridges[_bridge] = false;
         emit BridgeRemoved(_bridge);
     }
