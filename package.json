@@ -19,10 +19,11 @@
   "author": "Blockvis",
   "license": "ISC",
   "dependencies": {
-    "@openzeppelin/contracts": "^3.4.1",
+    "@openzeppelin/contracts": "^3.4.2",
     "csvtojson": "^2.0.10",
     "eslint": "^7.25.0",
     "eslint-config-prettier": "^8.3.0",
+    "eth-permit": "^0.1.10",
     "ethereumjs-util": "^7.0.10",
     "ganache-cli": "^6.12.2",
     "npm-run-all": "^4.1.5",

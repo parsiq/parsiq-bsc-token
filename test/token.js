@@ -6,9 +6,9 @@ require('chai')
   .should();
 
 const {increaseTime} = require('./utils.js');
+const {signERC2612Permit} = require('eth-permit');
 
 const OneToken = new BN(web3.utils.toWei('1', 'ether'));
-const OneEther = new BN(web3.utils.toWei('1', 'ether'));
 
 const ParsiqToken = artifacts.require('ParsiqToken');
 const TestERC20Token = artifacts.require('TestERC20Token');
@@ -35,11 +35,39 @@ contract('Parsiq Token', async (accounts) => {
     it('receives token name', async () => {
       (await token.name()).should.equal('Parsiq Token');
     });
+
     it('receives token symbol', async () => {
       (await token.symbol()).should.equal('PRQ');
     });
+
     it('receives decimals', async () => {
       (await token.decimals()).should.bignumber.equal('18');
+    });
+
+    it('DOMAIN_SEPARATOR, PERMIT_TYPEHASH', async () => {
+      const name = await token.name();
+
+      expect(await token.DOMAIN_SEPARATOR()).to.eq(
+        web3.utils.sha3(
+          web3.eth.abi.encodeParameters(
+            ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
+            [
+              web3.utils.sha3(
+                'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
+              ),
+              web3.utils.sha3(name),
+              web3.utils.sha3('1'),
+              1,
+              token.address,
+            ]
+          )
+        )
+      );
+      expect(await token.PERMIT_TYPEHASH()).to.eq(
+        web3.utils.sha3(
+          'Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'
+        )
+      );
     });
   });
 
@@ -241,6 +269,32 @@ contract('Parsiq Token', async (accounts) => {
       await token.recoverTokens(erc20Token.address, user1, OneToken, {
         from: user1,
       }).should.be.rejected;
+    });
+  });
+
+  describe('Permit', () => {
+    it('permit', async () => {
+      const testAmount = OneToken.mul(new BN(10));
+      const result = await signERC2612Permit(
+        web3.currentProvider,
+        token.address,
+        admin,
+        user1,
+        testAmount
+      );
+
+      await token.permit(
+        admin,
+        user1,
+        testAmount,
+        result.deadline,
+        result.v,
+        result.r,
+        result.s
+      );
+
+      (await token.allowance(admin, user1)).should.be.bignumber.eq(testAmount);
+      (await token.nonces(admin)).should.be.bignumber.eq(new BN(1));
     });
   });
 });

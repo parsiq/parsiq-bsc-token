@@ -16,9 +16,11 @@ const Ganache = require('ganache-core');
 
 const provider = Ganache.provider({
   default_balance_ether: 100000000,
-  mnemonic: 'swarm because dignity grid decide rigid once size leisure unhappy powder hazard minimum push river',
+  mnemonic:
+    'swarm because dignity grid decide rigid once size leisure unhappy powder hazard minimum push river',
   hardfork: 'istanbul',
   total_accounts: 110,
+  _chainIdRpc: 1,
 });
 
 module.exports = {
